@@ -1,5 +1,8 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
 const { server } = require('../server');
 
 let base;
@@ -31,4 +34,32 @@ test('send endpoints require an API key', async () => {
 test('API routes remain protected when no API secret is configured', async () => {
   const response = await fetch(base + '/api/v1/not-a-route', { method: 'POST', headers: { 'x-api-key': 'unused' } });
   assert.equal(response.status, 401);
+});
+
+test('dashboard JavaScript parses and core connection controls exist', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const match = html.match(/<script>([\\s\\S]*)<\\/script>/);
+  assert.ok(match, 'dashboard script exists');
+  assert.doesNotThrow(() => new vm.Script(match[1]));
+  for (const id of ['connectionForm', 'apiBase', 'apiKey', 'testConnection', 'disconnectApi', 'emailForm', 'otpForm', 'smsRecord', 'waRecord']) {
+    assert.match(html, new RegExp('id="' + id + '"'));
+  }
+  assert.match(html, /sessionStorage/);
+  assert.doesNotMatch(html, /localStorage\\.setItem\\([^,]*(?:API|apiKey)/);
+});
+
+test('CORS preflight allows only a configured dashboard origin', async () => {
+  const origin = 'https://dashboard.example.test';
+  process.env.CORS_ORIGIN = origin;
+  try {
+    const response = await fetch(base + '/api/v1/email/send', {
+      method: 'OPTIONS',
+      headers: { origin, 'access-control-request-method': 'POST', 'access-control-request-headers': 'content-type,x-api-key' }
+    });
+    assert.equal(response.status, 204);
+    assert.equal(response.headers.get('access-control-allow-origin'), origin);
+    assert.match(response.headers.get('access-control-allow-headers') || '', /X-API-Key/i);
+  } finally {
+    delete process.env.CORS_ORIGIN;
+  }
 });
