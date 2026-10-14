@@ -185,6 +185,8 @@ async function postGateway(urlString, token, payload) {
   } finally { clearTimeout(timeout); }
 }
 async function handle(req, res) {
+  // Correlation ID helps operators trace a failed request without logging message content or credentials.
+  res.setHeader('X-Request-Id', crypto.randomUUID());
   applyCors(req, res);
   const url = new URL(req.url, 'http://localhost');
   if (req.method === 'OPTIONS') {
