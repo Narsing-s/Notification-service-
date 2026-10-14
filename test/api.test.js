@@ -100,3 +100,26 @@ test('dashboard API requests have bounded timeouts and API key visibility contro
   assert.match(html, /sessionStorage\.setItem\(SESSION_API/);
   assert.equal(html.includes('localStorage.setItem(SESSION_API'), false);
 });
+
+
+test('workspace backup and restore are user-friendly and never export API credentials', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  for (const id of ['exportWorkspace', 'importWorkspace', 'workspaceBackupFile', 'backupMsg']) {
+    assert.match(html, new RegExp('id="' + id + '"'));
+  }
+  assert.match(html, /Safe workspace backup\/restore/);
+  assert.match(html, /API keys and credentials were excluded/);
+  assert.match(html, /maximum 1 MB/);
+  assert.match(html, /formatVersion:backupVersion/);
+  assert.match(html, /will replace local history, preferences, theme and saved templates/);
+  assert.match(html, /API connection settings will not be changed/);
+  assert.match(html, /sessionStorage and all API credentials/);
+});
+
+test('repository environment example contains placeholders, not live provider secrets', () => {
+  const env = fs.readFileSync(path.join(__dirname, '..', '.env.example'), 'utf8');
+  assert.match(env, /NEXUS_API_KEY=replace-with-a-long-random-secret/);
+  assert.match(env, /SMTP_PASS=replace-with-smtp-password/);
+  assert.doesNotMatch(env, /(?:sk_live_|ghp_[A-Za-z0-9]{20,}|AKIA[A-Z0-9]{16})/);
+  assert.equal(fs.existsSync(path.join(__dirname, '..', '.env')), false);
+});
