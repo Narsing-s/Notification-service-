@@ -38,8 +38,10 @@ test('API routes remain protected when no API secret is configured', async () =>
 
 test('dashboard JavaScript parses and core connection controls exist', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  const match = html.match(/<script>([\\s\\S]*)<\\/script>/);
-  assert.ok(match, 'dashboard script exists');
+  const scriptStart = html.indexOf('<script>');
+  const scriptEnd = html.lastIndexOf('</script>');
+  assert.ok(scriptStart >= 0 && scriptEnd > scriptStart, 'dashboard script exists');
+  assert.doesNotThrow(() => new vm.Script(html.slice(scriptStart + 8, scriptEnd)));
   assert.doesNotThrow(() => new vm.Script(match[1]));
   for (const id of ['connectionForm', 'apiBase', 'apiKey', 'testConnection', 'disconnectApi', 'emailForm', 'otpForm', 'smsRecord', 'waRecord']) {
     assert.match(html, new RegExp('id="' + id + '"'));
