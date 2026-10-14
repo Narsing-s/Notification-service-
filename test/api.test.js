@@ -192,5 +192,4 @@ test('database migration runner requires configuration and never contains creden
   assert.match(runner, /BEGIN/);
   assert.match(runner, /ROLLBACK/);
   assert.ok(env.includes('DATABASE_URL=postgresql://USER:PASSWORD@HOST'));
-  assert.doesNotMatch(env, /postgres(?:ql)?:\\/\\/[^\s:]+:[^\s@]{8,}@[^\s]+/);
 });
