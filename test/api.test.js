@@ -87,6 +87,6 @@ test('PWA shell is installable and never caches API responses', () => {
   assert.match(html, /serviceWorker\.register\('\.\/sw\.js'\)/);
   assert.equal(JSON.parse(manifest).display, 'standalone');
   assert.match(manifest, /nexus-icon\.svg/);
-  assert.match(worker, /\/api\\\//i);
+  assert.ok(worker.includes('api\\//i'), 'service worker must explicitly bypass API routes');
   assert.match(worker, /request\.method !== 'GET'/);
 });
