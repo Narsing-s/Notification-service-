@@ -141,3 +141,12 @@ test('server bounds rate-limit memory and configures HTTP timeouts', () => {
   assert.match(source, /server\.headersTimeout = 10000/);
   assert.match(source, /server\.keepAliveTimeout = 5000/);
 });
+
+
+test('OTP persistence removes expired or malformed records and caps stored records', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+  assert.match(source, /const MAX_OTP_RECORDS = 10000/);
+  assert.match(source, /entry\.expiresAt <= now/);
+  assert.match(source, /keys\.length > MAX_OTP_RECORDS/);
+  assert.match(source, /delete value\[key\]/);
+});
