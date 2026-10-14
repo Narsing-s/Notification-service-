@@ -5,6 +5,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { databaseConfigured, checkDatabase } = require('./db/connection');
 
 const PORT = Number(process.env.PORT || 3000);
 const API_KEY = process.env.NEXUS_API_KEY || '';
@@ -198,10 +199,24 @@ async function handle(req, res) {
     res.writeHead(204);
     return res.end();
   }
+  if (req.method === 'GET' && url.pathname === '/ready') {
+    const database = await checkDatabase();
+    const ready = !databaseConfigured() || database.status === 'connected';
+    return json(res, ready ? 200 : 503, {
+      service: 'Nexus Notify',
+      status: ready ? 'ready' : 'not_ready',
+      database,
+      note: ready && !database.configured
+        ? 'API is running without PostgreSQL. Persistent notification storage is not active.'
+        : ready
+          ? 'PostgreSQL connectivity is healthy. This probe does not verify queue worker or provider delivery.'
+          : 'Database is configured but unavailable. Check private hosting configuration and database health.'
+    });
+  }
   if (req.method === 'GET' && ['/health', '/api/v1/health'].includes(url.pathname)) {
     return json(res, 200, {
       service: 'Nexus Notify', status: 'online', channels: channelStatus(),
-      storage: 'local JSON file for OTP state; no database',
+      storage: databaseConfigured() ? 'PostgreSQL configured; OTP state still uses local JSON file' : 'local JSON file for OTP state; PostgreSQL not configured',
       note: 'Online means the API process is running. Channel status is configuration only, not a delivery guarantee.'
     });
   }
