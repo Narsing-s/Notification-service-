@@ -248,3 +248,21 @@ test('persistent notification queue uses idempotency and parameterized SQL', () 
   assert.ok(queue.includes('database_not_configured'));
   assert.ok(queue.includes('$1'));
 });
+
+
+test('analytics endpoint remains protected by the API key', async () => {
+  const response = await fetch(base + '/api/v1/analytics/summary?days=7');
+  assert.equal(response.status, 401);
+  assert.equal((await response.json()).error, 'unauthorized');
+});
+
+test('analytics aggregation is bounded and distinguishes provider acceptance from delivery', () => {
+  const analytics = fs.readFileSync(path.join(__dirname, '..', 'db', 'analytics.js'), 'utf8');
+  assert.ok(analytics.includes('Math.min(90'));
+  assert.ok(analytics.includes("status = 'delivered'"));
+  assert.ok(analytics.includes("status = 'accepted'"));
+  assert.ok(analytics.includes('dailyTrend'));
+  assert.ok(analytics.includes('not confirmed delivery'));
+  const worker = fs.readFileSync(path.join(__dirname, '..', 'worker.js'), 'utf8');
+  assert.doesNotThrow(() => new vm.Script(worker));
+});
