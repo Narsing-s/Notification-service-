@@ -23,7 +23,7 @@ test('send endpoints require an API key', async () => {
   assert.equal((await response.json()).error, 'unauthorized');
 });
 
-test('unknown API routes return 404', async () => {
+test('API routes remain protected when no API secret is configured', async () => {
   const response = await fetch(base + '/api/v1/not-a-route', { method: 'POST', headers: { 'x-api-key': 'unused' } });
-  assert.equal(response.status, 404);
+  assert.equal(response.status, 401);
 });
