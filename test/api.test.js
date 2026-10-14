@@ -42,7 +42,6 @@ test('dashboard JavaScript parses and core connection controls exist', () => {
   const scriptEnd = html.lastIndexOf('</script>');
   assert.ok(scriptStart >= 0 && scriptEnd > scriptStart, 'dashboard script exists');
   assert.doesNotThrow(() => new vm.Script(html.slice(scriptStart + 8, scriptEnd)));
-  assert.doesNotThrow(() => new vm.Script(match[1]));
   for (const id of ['connectionForm', 'apiBase', 'apiKey', 'testConnection', 'disconnectApi', 'emailForm', 'otpForm', 'smsRecord', 'waRecord']) {
     assert.match(html, new RegExp('id="' + id + '"'));
   }
