@@ -81,6 +81,14 @@ paths:
           description: Notification status and provider acceptance metadata.
         '404':
           description: Notification was not found.
+  /api/v1/monitoring/summary:
+    get:
+      summary: Check queue health and generate persistent operational alerts
+      responses:
+        '200':
+          description: Queue health metrics and open database alerts.
+        '503':
+          description: Persistent monitoring is unavailable.
   /api/v1/analytics/summary:
     get:
       summary: Summarize persisted notification metrics
