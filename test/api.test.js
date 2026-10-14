@@ -77,3 +77,16 @@ test('dashboard exposes browser-local custom templates and live character counts
   assert.match(html, /function renderSaved/);
   assert.match(html, /near-limit/);
 });
+
+test('PWA shell is installable and never caches API responses', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const manifest = fs.readFileSync(path.join(__dirname, '..', 'manifest.webmanifest'), 'utf8');
+  const worker = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+  assert.match(html, /rel="manifest" href="\.\/manifest\.webmanifest"/);
+  assert.match(html, /id="installApp"/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js'\)/);
+  assert.equal(JSON.parse(manifest).display, 'standalone');
+  assert.match(manifest, /nexus-icon\.svg/);
+  assert.match(worker, /\/api\\\//i);
+  assert.match(worker, /request\.method !== 'GET'/);
+});
