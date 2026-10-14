@@ -1,0 +1,146 @@
+openapi: 3.1.0
+info:
+  title: Nexus Notify API
+  version: 0.2.0
+  description: >-
+    Multi-channel notification API. A 202 response indicates acceptance by the
+    configured SMTP server or gateway, not final recipient delivery.
+servers:
+  - url: https://api.example.com
+    description: Replace with your trusted API host
+security:
+  - ApiKeyAuth: []
+paths:
+  /api/v1/health:
+    get:
+      security: []
+      summary: Check process and channel configuration
+      description: Public process health only. Channel configuration is not a delivery guarantee.
+      responses:
+        '200':
+          description: API process is online
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service: { type: string, example: Nexus Notify }
+                  status: { type: string, example: online }
+                  channels:
+                    type: object
+                    properties:
+                      email: { type: string }
+                      otp: { type: string }
+                      sms: { type: string }
+                      whatsapp: { type: string }
+                  note: { type: string }
+  /api/v1/email/send:
+    post:
+      summary: Send plain-text email through configured SMTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, subject, text]
+              properties:
+                to: { type: string, format: email, maxLength: 254 }
+                subject: { type: string, maxLength: 200 }
+                text: { type: string, maxLength: 10000 }
+      responses:
+        '202':
+          description: Accepted by SMTP; final inbox delivery is not guaranteed
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { description: SMTP is not configured }
+  /api/v1/otp/send:
+    post:
+      summary: Send a single-use email OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, purpose]
+              properties:
+                to: { type: string, format: email }
+                purpose: { type: string, maxLength: 100 }
+      responses:
+        '202': { description: OTP email accepted by SMTP; code is not returned }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { description: Rate limit or OTP resend cooldown }
+        '503': { description: SMTP is not configured }
+  /api/v1/otp/verify:
+    post:
+      summary: Verify and invalidate an email OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, purpose, code]
+              properties:
+                to: { type: string, format: email }
+                purpose: { type: string, maxLength: 100 }
+                code: { type: string, pattern: '^[0-9]{6}$' }
+      responses:
+        '200': { description: OTP verified and invalidated }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/v1/sms/send:
+    post:
+      summary: Submit SMS to a configured gateway adapter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, text]
+              properties:
+                to: { type: string, maxLength: 32, example: '+919876543210' }
+                text: { type: string, maxLength: 1600 }
+      responses:
+        '202': { description: Accepted by gateway; carrier delivery is not confirmed }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { description: SMS gateway is not configured }
+  /api/v1/whatsapp/send:
+    post:
+      summary: Submit WhatsApp message to an authorized gateway adapter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, text]
+              properties:
+                to: { type: string, maxLength: 32, example: '+919876543210' }
+                text: { type: string, maxLength: 4096 }
+      responses:
+        '202': { description: Accepted by gateway; WhatsApp delivery is not confirmed }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { description: WhatsApp gateway is not configured }
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  responses:
+    Unauthorized:
+      description: Missing or invalid API key
+    RateLimited:
+      description: Too many requests
+    ValidationError:
+      description: Request validation failed
