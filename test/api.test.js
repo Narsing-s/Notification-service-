@@ -42,7 +42,7 @@ test('dashboard JavaScript parses and core connection controls exist', () => {
   const scriptEnd = html.lastIndexOf('</script>');
   assert.ok(scriptStart >= 0 && scriptEnd > scriptStart, 'dashboard script exists');
   assert.doesNotThrow(() => new vm.Script(html.slice(scriptStart + 8, scriptEnd)));
-  for (const id of ['connectionForm', 'apiBase', 'apiKey', 'testConnection', 'disconnectApi', 'emailForm', 'otpForm', 'smsRecord', 'waRecord', 'activityList', 'activitySearch', 'activityChannel', 'activityStatus', 'exportActivityCsv', 'themeToggle', 'emailTemplate', 'smsTemplate', 'waTemplate']) {
+  for (const id of ['connectionForm', 'apiBase', 'apiKey', 'toggleApiKey', 'testConnection', 'disconnectApi', 'emailForm', 'otpForm', 'smsRecord', 'waRecord', 'activityList', 'activitySearch', 'activityChannel', 'activityStatus', 'exportActivityCsv', 'themeToggle', 'emailTemplate', 'smsTemplate', 'waTemplate']) {
     assert.match(html, new RegExp('id="' + id + '"'));
   }
   assert.match(html, /sessionStorage/);
@@ -89,4 +89,14 @@ test('PWA shell is installable and never caches API responses', () => {
   assert.match(manifest, /nexus-icon\.svg/);
   assert.ok(worker.includes('api\\//i'), 'service worker must explicitly bypass API routes');
   assert.match(worker, /request\.method !== 'GET'/);
+});
+
+test('dashboard API requests have bounded timeouts and API key visibility control', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.match(html, /setTimeout\(\(\)=>controller\.abort\(\),15000\)/);
+  assert.match(html, /setTimeout\(\(\)=>controller\.abort\(\),8000\)/);
+  assert.match(html, /aria-label="Show API key"/);
+  assert.match(html, /keyToggle\.setAttribute\('aria-pressed'/);
+  assert.match(html, /sessionStorage\.setItem\(SESSION_API/);
+  assert.equal(html.includes('localStorage.setItem(SESSION_API'), false);
 });
