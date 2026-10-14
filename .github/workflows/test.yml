@@ -13,6 +13,8 @@ on:
       - 'openapi.yaml'
       - '.env.example'
       - 'server.js'
+      - 'db/**'
+      - 'scripts/**'
       - 'package.json'
       - 'package-lock.json'
       - 'test/**'
