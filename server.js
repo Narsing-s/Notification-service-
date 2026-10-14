@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { databaseConfigured, checkDatabase } = require('./db/connection');
+const { enqueueNotification, getNotification, listNotifications } = require('./db/notifications');
 
 const PORT = Number(process.env.PORT || 3000);
 const API_KEY = process.env.NEXUS_API_KEY || '';
@@ -83,7 +84,7 @@ function applyCors(req, res) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,X-API-Key');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,X-API-Key,Idempotency-Key');
     res.setHeader('Access-Control-Max-Age', '600');
   }
 }
@@ -221,8 +222,23 @@ async function handle(req, res) {
     });
   }
   if (!url.pathname.startsWith('/api/v1/')) return json(res, 404, { error: 'not_found' });
-  if (!['POST'].includes(req.method)) return json(res, 405, { error: 'method_not_allowed' });
+  const notificationReadRoute = req.method === 'GET' && (url.pathname === '/api/v1/notifications' || url.pathname.startsWith('/api/v1/notifications/'));
+  const notificationQueueRoute = req.method === 'POST' && url.pathname === '/api/v1/notifications';
+  if (!['POST'].includes(req.method) && !notificationReadRoute) return json(res, 405, { error: 'method_not_allowed' });
   if (!authorized(req)) return json(res, 401, { error: 'unauthorized', message: 'A valid X-API-Key is required.' });
+  if (notificationReadRoute) {
+    try {
+      if (url.pathname === '/api/v1/notifications') {
+        return json(res, 200, await listNotifications({ limit: url.searchParams.get('limit'), offset: url.searchParams.get('offset'), status: url.searchParams.get('status') }));
+      }
+      const match = url.pathname.match(/^\/api\/v1\/notifications\/([^/]+)$/);
+      if (!match) return json(res, 404, { error: 'not_found' });
+      const item = await getNotification(match[1]);
+      return item ? json(res, 200, item) : json(res, 404, { error: 'notification_not_found' });
+    } catch (err) {
+      return json(res, err.status || 503, { error: err.code || 'notification_history_unavailable', message: err.status ? err.message : 'Notification history could not be loaded.' });
+    }
+  }
   if (rateLimited(req)) {
     res.setHeader('Retry-After', '60');
     return json(res, 429, { error: 'rate_limited', message: 'Too many requests. Wait at least 60 seconds before retrying.' });
@@ -237,6 +253,19 @@ async function handle(req, res) {
   catch (err) { return json(res, err.status || 400, { error: 'invalid_request', message: err.message }); }
 
   try {
+    if (notificationQueueRoute) {
+      const item = await enqueueNotification(body, String(req.headers['idempotency-key'] || ''));
+      return json(res, item.duplicate ? 200 : 202, {
+        id: item.id,
+        channel: item.channel,
+        status: item.status,
+        scheduledAt: item.scheduled_at,
+        duplicate: item.duplicate,
+        message: item.duplicate
+          ? 'This idempotency key already has a notification record; no duplicate was queued.'
+          : 'Notification persisted in the PostgreSQL queue. Delivery requires a configured worker and provider.'
+      });
+    }
     if (url.pathname === '/api/v1/email/send') {
       if (!validEmail(body.to) || !safeText(body.subject, 200) || !safeText(body.text, 10000)) {
         return json(res, 400, { error: 'validation_error', message: 'Provide a valid to email, subject (max 200 chars), and text (max 10000 chars).' });
