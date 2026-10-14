@@ -66,3 +66,14 @@ test('CORS preflight allows only a configured dashboard origin', async () => {
     delete process.env.CORS_ORIGIN;
   }
 });
+
+test('dashboard exposes browser-local custom templates and live character counts', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.match(html, /nexus-notify-custom-templates-v1/);
+  assert.match(html, /Save current message as a reusable template/);
+  assert.match(html, /Delete selected/);
+  assert.match(html, /characters/);
+  assert.match(html, /Saved templates stay in this browser only|Your custom templates stay in this browser only/);
+  assert.match(html, /function renderSaved/);
+  assert.match(html, /near-limit/);
+});
