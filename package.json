@@ -1,11 +1,14 @@
 {
   "name": "nexus-notify-platform",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Own-brand multi-channel notification platform starter",
+  "description": "Own-brand multi-channel notification platform with SMTP email and configurable gateway adapters",
   "scripts": {
     "start": "node server.js",
     "test": "node --test"
+  },
+  "dependencies": {
+    "nodemailer": "^7.0.3"
   },
   "engines": {
     "node": ">=20"
