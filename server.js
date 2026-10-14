@@ -11,6 +11,7 @@ const API_KEY = process.env.NEXUS_API_KEY || '';
 const MAX_BODY = 32 * 1024;
 const OTP_TTL_MS = 5 * 60 * 1000;
 const MAX_OTP_ATTEMPTS = 5;
+const MAX_OTP_RECORDS = 10000;
 const RATE_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT = 12;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
@@ -44,7 +45,28 @@ const mailer = createTransport();
 function readOtpState() {
   try {
     const value = JSON.parse(fs.readFileSync(OTP_FILE, 'utf8'));
-    return value && typeof value === 'object' ? value : {};
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+    const now = Date.now();
+    let changed = false;
+    for (const [key, entry] of Object.entries(value)) {
+      if (!entry || typeof entry !== 'object' || !Number.isFinite(entry.expiresAt) ||
+          entry.expiresAt <= now || typeof entry.hash !== 'string' ||
+          typeof entry.salt !== 'string') {
+        delete value[key];
+        changed = true;
+      }
+    }
+    // Keep persisted OTP state bounded even if a client rotates purposes/recipients.
+    const keys = Object.keys(value);
+    if (keys.length > MAX_OTP_RECORDS) {
+      keys.sort((a, b) => (Number(value[a].lastSentAt) || 0) - (Number(value[b].lastSentAt) || 0));
+      for (const key of keys.slice(0, keys.length - MAX_OTP_RECORDS)) {
+        delete value[key];
+        changed = true;
+      }
+    }
+    if (changed) writeOtpState(value);
+    return value;
   } catch { return {}; }
 }
 function writeOtpState(state) {
