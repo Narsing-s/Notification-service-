@@ -30,7 +30,7 @@ async function claimOne() {
   try {
     await client.query('BEGIN');
     const selected = await client.query(
-      "SELECT id, channel, recipient, subject, body, attempts, max_attempts FROM notifications WHERE ((status = 'queued' AND next_attempt_at <= now()) OR (status = 'processing' AND updated_at < now() - interval '5 minutes')) ORDER BY next_attempt_at, created_at FOR UPDATE SKIP LOCKED LIMIT 1"
+      "SELECT id, channel, recipient, subject, body, attempts, max_attempts FROM notifications WHERE ((status = 'queued' AND next_attempt_at <= now()) OR (status = 'processing' AND updated_at < now() - interval '5 minutes')) ORDER BY next_attempt_at, created_at LIMIT 1 FOR UPDATE SKIP LOCKED"
     );
     if (!selected.rows[0]) { await client.query('COMMIT'); return null; }
     const row = selected.rows[0];
