@@ -42,4 +42,66 @@ $('smsRecord').addEventListener('click',async()=>{const to=$('smsTo').value.trim
 $('waRecord').addEventListener('click',async()=>{const to=$('waTo').value.trim(),body=$('waBody').value.trim(),button=$('waRecord');if(!/^\+[1-9]\d{7,14}$/.test(to)||!body){msg('waMsg','Enter a valid international phone number and message.','error');return}button.disabled=true;try{if(apiReady()){const result=await apiCall('/api/v1/whatsapp/send',{to,text:body});record('WhatsApp',to,'WhatsApp request',result.status||'Accepted by gateway');msg('waMsg','Gateway accepted the request. WhatsApp delivery is not confirmed.','ok')}else{record('WhatsApp',to,'WhatsApp request');msg('waMsg','Request validated and recorded locally. No WhatsApp message was sent. Connect a configured API in Settings.','info')}}catch(err){msg('waMsg',err.message,'error')}finally{button.disabled=false}});
 function renderActivity(records){const list=$('activityList');if(!list)return;const query=($('activitySearch')?.value||'').trim().toLowerCase();const channel=$('activityChannel')?.value||'';const status=$('activityStatus')?.value||'';const sort=$('activitySort')?.value||'newest';let rows=records.filter(x=>(!query||[x.to,x.detail,x.channel,x.status].some(v=>String(v||'').toLowerCase().includes(query)))&&(!channel||x.channel===channel)&&(!status||(status==='local'&&/local|not sent/i.test(x.status||''))||(status==='accepted'&&/accepted/i.test(x.status||''))||(status==='verified'&&/verified/i.test(x.status||''))));rows.sort((a,b)=>sort==='oldest'?new Date(a.time)-new Date(b.time):new Date(b.time)-new Date(a.time));$('activitySummary').textContent=rows.length+' of '+records.length+' records';list.replaceChildren();if(!rows.length){const empty=document.createElement('div');empty.className='muted';empty.textContent=records.length?'No records match these filters.':'No activity recorded yet.';list.appendChild(empty);return}rows.forEach(x=>{const row=document.createElement('div');row.className='item';const icon=document.createElement('div');icon.className='itemicon';icon.textContent=({Email:'✉',OTP:'⌁',SMS:'▤',WhatsApp:'◉'})[x.channel]||'•';const body=document.createElement('div');body.className='itembody';const title=document.createElement('strong');title.textContent=x.channel+' · '+x.to;const detail=document.createElement('span');detail.textContent=(x.detail||'Request')+' · '+new Date(x.time).toLocaleString();const badge=document.createElement('span');badge.className='badge';badge.textContent=x.status||'Local only';body.append(title,detail);row.append(icon,body,badge);list.appendChild(row)})}
 ['activitySearch','activityChannel','activityStatus','activitySort'].forEach(id=>$(id).addEventListener(id==='activitySearch'?'input':'change',()=>renderActivity(readHistory())));$('resetActivityFilters').addEventListener('click',()=>{$('activitySearch').value='';$('activityChannel').value='';$('activityStatus').value='';$('activitySort').value='newest';renderActivity(readHistory())});$('clearActivity').addEventListener('click',()=>{if(confirm('Delete all local activity history from this browser?')){localStorage.removeItem(KEY);render()}});$('exportActivityCsv').addEventListener('click',()=>{const rows=readHistory();const quote=v=>'"'+String(v??'').replace(/"/g,'""')+'"';const csv=[['time','channel','recipient','description','status'],...rows.map(x=>[x.time,x.channel,x.to,x.detail,x.status])].map(row=>row.map(quote).join(',')).join(String.fromCharCode(13,10));const blob=new Blob([String.fromCharCode(65279)+csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='nexus-notify-activity.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});$('settingsForm').addEventListener('submit',e=>{e.preventDefault();localStorage.setItem(PREF,JSON.stringify({name:$('workspaceName').value,channel:$('defaultChannel').value}));msg('settingsMsg','Preferences saved in this browser.','ok')});$('clearHistory').addEventListener('click',()=>{if(confirm('Delete local message history from this browser?')){localStorage.removeItem(KEY);render()}});$('exportHistory').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(readHistory(),null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nexus-notify-local-history.json';a.click();URL.revokeObjectURL(a.href)});$('clearSettings').addEventListener('click',()=>{if(confirm('Clear local preferences, theme, API session and message history?')){localStorage.removeItem(KEY);localStorage.removeItem(PREF);localStorage.removeItem(THEME);sessionStorage.removeItem(SESSION_API);$('apiKey').value='';$('apiBase').value='';applyTheme('dark');setConnectionState('Demo mode · local only');render();$('workspaceName').value='Nexus Notify';$('defaultChannel').value='Email';msg('settingsMsg','Local preferences, history and API session cleared.','ok')}});try{const p=JSON.parse(localStorage.getItem(PREF)||'{}');if(p.name)$('workspaceName').value=p.name;if(p.channel)$('defaultChannel').value=p.channel}catch{}render();
+
+/* Personal template library and live message-length guidance. Saved only in this browser. */
+(function(){
+  const STORE='nexus-notify-custom-templates-v1';
+  const channels=[
+    {key:'email',select:'emailTemplate',name:'Email',fields:['emailSubject','emailBody'],limit:10000},
+    {key:'sms',select:'smsTemplate',name:'SMS',fields:['smsBody'],limit:1600},
+    {key:'whatsapp',select:'waTemplate',name:'WhatsApp',fields:['waBody'],limit:4096}
+  ];
+  function load(){try{const value=JSON.parse(localStorage.getItem(STORE)||'[]');return Array.isArray(value)?value.filter(x=>x&&typeof x.id==='string'&&typeof x.channel==='string'&&typeof x.name==='string'):[]}catch{return []}}
+  function persist(items){localStorage.setItem(STORE,JSON.stringify(items.slice(-100)))}
+  function currentBody(c){return c.fields.map(id=>$(id).value)}
+  function renderSaved(c){
+    const select=$(c.select);
+    [...select.options].filter(o=>o.value.startsWith('saved:')).forEach(o=>o.remove());
+    const items=load().filter(t=>t.channel===c.key);
+    if(items.length){const group=document.createElement('optgroup');group.label='Your saved templates';items.forEach(t=>{const option=document.createElement('option');option.value='saved:'+t.id;option.textContent=t.name;group.appendChild(option)});select.appendChild(group)}
+  }
+  function feedback(target,text,type='info'){let box=$(target+'TemplateMsg');if(!box){box=document.createElement('div');box.id=target+'TemplateMsg';box.className='message';box.setAttribute('role','status');$(target+'TemplateTools').appendChild(box)}box.textContent=text;box.className='message show '+type}
+  channels.forEach(c=>{
+    const select=$(c.select);if(!select)return;
+    const toolsBox=document.createElement('div');toolsBox.id=c.key+'TemplateTools';toolsBox.className='template-tools';
+    toolsBox.innerHTML='<div class="field"><label for="'+c.key+'TemplateName">Save current message as a reusable template</label><div class="template-row"><input id="'+c.key+'TemplateName" maxlength="50" placeholder="e.g. Order shipped"><button type="button" data-save-template="'+c.key+'">Save template</button><button type="button" data-delete-template="'+c.key+'">Delete selected</button></div></div><p class="tiny">Your custom templates stay in this browser only; they are not sent to the server.</p>';
+    select.parentElement.insertAdjacentElement('afterend',toolsBox);
+    renderSaved(c);
+    select.addEventListener('change',()=>{
+      if(!select.value.startsWith('saved:'))return;
+      const item=load().find(t=>t.id===select.value.slice(6)&&t.channel===c.key);
+      if(!item)return;
+      c.fields.forEach((id,i)=>$(id).value=item.values[i]||'');
+      feedback(c.key,'Loaded template: '+item.name,'ok');
+    });
+    toolsBox.querySelector('[data-save-template]').addEventListener('click',()=>{
+      const name=$(c.key+'TemplateName').value.trim();
+      const values=currentBody(c);
+      if(!name){feedback(c.key,'Enter a name for this template.','error');$(c.key+'TemplateName').focus();return}
+      if(values.every(v=>!v.trim())){feedback(c.key,'Add a message before saving a template.','error');return}
+      const items=load();items.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2),channel:c.key,name,values,updatedAt:new Date().toISOString()});
+      persist(items);renderSaved(c);const latest=items[items.length-1];select.value='saved:'+latest.id;$(c.key+'TemplateName').value='';feedback(c.key,'Template saved in this browser.','ok');
+    });
+    toolsBox.querySelector('[data-delete-template]').addEventListener('click',()=>{
+      if(!select.value.startsWith('saved:')){feedback(c.key,'Choose one of your saved templates first.','error');return}
+      const id=select.value.slice(6),items=load(),found=items.find(t=>t.id===id&&t.channel===c.key);
+      if(!found)return;
+      if(!confirm('Delete saved template "'+found.name.replace(/"/g,'')+'"?'))return;
+      persist(items.filter(t=>t.id!==id));select.value='';renderSaved(c);feedback(c.key,'Saved template deleted.','ok');
+    });
+    const textarea=$(c.fields[c.fields.length-1]);
+    if(textarea){
+      const counter=document.createElement('div');counter.className='tiny char-counter';counter.id=c.key+'CharCount';counter.setAttribute('aria-live','polite');textarea.insertAdjacentElement('afterend',counter);
+      const update=()=>{const max=textarea.maxLength>0?textarea.maxLength:c.limit;counter.textContent=textarea.value.length+' / '+max+' characters';counter.classList.toggle('near-limit',textarea.value.length>=max*.9);};
+      textarea.addEventListener('input',update);update();
+    }
+  });
+  const style=document.createElement('style');
+  style.textContent='.template-tools{border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0 16px;background:var(--panel)}.template-row{display:flex;gap:8px;flex-wrap:wrap}.template-row input{flex:1;min-width:140px}.template-row button{padding:9px 11px;font-size:13px}.char-counter{text-align:right;margin:-5px 0 12px}.char-counter.near-limit{color:var(--amber);font-weight:700}@media(max-width:520px){.template-row button{flex:1}}';
+  document.head.appendChild(style);
+  window.addEventListener('storage',e=>{if(e.key===STORE)channels.forEach(renderSaved)});
+  const originalClear=$('clearSettings');
+  if(originalClear)originalClear.addEventListener('click',()=>{localStorage.removeItem(STORE);channels.forEach(c=>{renderSaved(c);$(c.select).value=''})});
+})();
+
 </script></body></html>
