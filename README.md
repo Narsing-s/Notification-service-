@@ -15,6 +15,17 @@ A PostgreSQL schema and migration runner are now included for the next productio
 - `audit_events` and `system_alerts`: operational audit and alert records.
 - Indexes for due queue jobs, notification history and open alerts.
 
+
+### Database readiness probe
+
+The API also exposes `GET /ready` for hosting health checks. It returns the PostgreSQL connection status when `DATABASE_URL` is configured and uses a bounded connection pool with connection/query timeouts. The response deliberately never includes the database URL or credentials.
+
+- `/health` reports that the process is running.
+- `/ready` reports whether the configured database can be reached.
+- If PostgreSQL is not configured, the API reports that persistent storage is not active rather than pretending it is ready for database-backed operation.
+
+This probe verifies database connectivity only. It does not prove that the queue worker is running, providers are configured, or messages are delivered.
+
 ### Prepare a database
 
 1. Provision a PostgreSQL database on a trusted host.
