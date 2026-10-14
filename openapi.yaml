@@ -11,6 +11,76 @@ servers:
 security:
   - ApiKeyAuth: []
 paths:
+  /ready:
+    get:
+      security: []
+      summary: Check database readiness
+      responses:
+        '200':
+          description: API ready; PostgreSQL may be unconfigured
+        '503':
+          description: PostgreSQL is configured but unavailable
+  /api/v1/notifications:
+    post:
+      summary: Persist a notification in the durable queue
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema: { type: string, maxLength: 200 }
+          description: Reuse the same key only when retrying the same intended operation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, to, text]
+              properties:
+                channel: { type: string, enum: [email, sms, whatsapp] }
+                to: { type: string, maxLength: 254 }
+                subject: { type: string, maxLength: 200 }
+                text: { type: string, maxLength: 10000 }
+                scheduledAt: { type: string, format: date-time }
+      responses:
+        '202':
+          description: Notification persisted and queued; delivery has not yet been confirmed.
+        '200':
+          description: Existing idempotent queue record returned.
+        '400':
+          description: Invalid notification data.
+        '503':
+          description: PostgreSQL queue is unavailable.
+    get:
+      summary: List persistent notification history
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - in: query
+          name: offset
+          schema: { type: integer, minimum: 0, default: 0 }
+        - in: query
+          name: status
+          schema: { type: string }
+      responses:
+        '200':
+          description: Notification history, without message bodies.
+        '503':
+          description: Persistent history is unavailable.
+  /api/v1/notifications/{notificationId}:
+    get:
+      summary: Read notification lifecycle status
+      parameters:
+        - in: path
+          name: notificationId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Notification status and provider acceptance metadata.
+        '404':
+          description: Notification was not found.
   /api/v1/health:
     get:
       security: []
