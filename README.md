@@ -3,6 +3,33 @@
 An own-brand notification platform starter with a responsive dashboard, protected Node.js API, SMTP email, email OTP, and configurable SMS/WhatsApp gateway adapters.
 
 
+
+## Durable notification queue (new)
+
+When PostgreSQL is configured and the schema migration has been applied, the API supports a durable queue and status history:
+
+- `POST /api/v1/notifications` — queue an `email`, `sms`, or `whatsapp` notification. Email requires `to`, `subject`, and `text`; other channels require `to` and `text`. Optional `scheduledAt` is an ISO date string.
+- `Idempotency-Key: <your-unique-operation-id>` — safely repeat a client request without inserting another queue row. Use the same key only for retries of the same intended operation.
+- `GET /api/v1/notifications?limit=25&offset=0&status=queued` — inspect recent queue records.
+- `GET /api/v1/notifications/<notification-id>` — inspect a single notification's lifecycle and last provider result.
+- All these API routes require the configured `X-API-Key`. They never return notification message bodies in history responses.
+
+### Run the queue worker
+
+Run database migration first, then run the worker as a separate long-lived Node.js process on a persistent Node host:
+
+```sh
+npm install
+npm run db:migrate
+npm run worker
+```
+
+The worker claims due rows with PostgreSQL row locks so multiple worker processes can safely share the queue. It records each delivery attempt, retries temporary failures with exponential backoff, moves exhausted/permanent failures to `dead_letter`, and recovers stale `processing` rows. Configure SMTP for email and the channel gateway environment variables for SMS/WhatsApp. No credentials belong in source control.
+
+**Delivery semantics:** a worker success means the configured SMTP server or gateway accepted the message. It does not mean the recipient received it. Provider callbacks/webhooks are still needed to turn accepted messages into confirmed `delivered` status. As with most external provider integrations, a crash after provider acceptance but before the database update can cause a retry; use provider-side idempotency where supported.
+
+The API's direct `/api/v1/email/send`, `/api/v1/sms/send`, and `/api/v1/whatsapp/send` routes remain immediate-send routes; use `/api/v1/notifications` when durable queuing is required. Account login, per-user authorization, preference enforcement, analytics dashboards, provider delivery webhooks, and alert dispatch are not yet implemented.
+
 ## PostgreSQL platform foundation (new)
 
 A PostgreSQL schema and migration runner are now included for the next production-hardening phase:
