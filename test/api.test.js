@@ -209,8 +209,8 @@ test('readiness endpoint reports PostgreSQL status without exposing connection d
 
 test('PostgreSQL connection helper bounds pool size and query timeouts', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'db', 'connection.js'), 'utf8');
-  assert.match(source, /max: Number\\(process\\.env\\.PGPOOL_MAX \\|\\| 5\\)/);
-  assert.match(source, /connectionTimeoutMillis: 5000/);
-  assert.match(source, /statement_timeout: 10000/);
-  assert.match(source, /SELECT 1/);
+  assert.ok(source.includes('max: Number(process.env.PGPOOL_MAX || 5)'));
+  assert.ok(source.includes('connectionTimeoutMillis: 5000'));
+  assert.ok(source.includes('statement_timeout: 10000'));
+  assert.ok(source.includes('SELECT 1'));
 });
