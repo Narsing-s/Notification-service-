@@ -1,12 +1,17 @@
-const { test } = require('node:test');
+const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { server } = require('../server');
 
 let base;
-test('health endpoint reports process state without claiming delivery', async (t) => {
+before(async () => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   base = 'http://127.0.0.1:' + server.address().port;
-  t.after(() => new Promise(resolve => server.close(resolve)));
+});
+after(async () => {
+  if (server.listening) await new Promise(resolve => server.close(resolve));
+});
+
+test('health endpoint reports process state without claiming delivery', async () => {
   const response = await fetch(base + '/api/v1/health');
   assert.equal(response.status, 200);
   const body = await response.json();
