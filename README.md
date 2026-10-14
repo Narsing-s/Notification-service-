@@ -4,7 +4,7 @@ An own-brand notification platform starter with a responsive dashboard, protecte
 
 ## Implemented
 
-- Dashboard in `index.html`; its browser preferences/history remain local to that browser.
+- Dashboard in `index.html`; its browser preferences/history remain local to that browser. Installable PWA shell (`manifest.webmanifest`, `sw.js`, `nexus-icon.svg`) supports adding the dashboard to compatible devices and opening the cached dashboard shell offline. API routes are excluded from service-worker caching; offline mode never pretends messages were delivered.
 - Searchable activity log with channel/status filters, newest/oldest sorting, JSON export, CSV export, and explicit clear-history controls.
 - Light/dark theme toggle remembered on this browser, built-in email/SMS/WhatsApp quick-start templates, and a browser-local custom template library (save, load, delete) for each channel. Custom templates never leave the browser and are cleared by the full local reset.\n- Live character counters for message bodies, including a visual warning as the field approaches its limit.
 - `GET /api/v1/health` reports process and channel configuration without claiming messages were delivered.
