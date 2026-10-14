@@ -6,7 +6,7 @@ An own-brand notification platform starter with a responsive dashboard, protecte
 
 - Dashboard in `index.html`; its browser preferences/history remain local to that browser.
 - Searchable activity log with channel/status filters, newest/oldest sorting, JSON export, CSV export, and explicit clear-history controls.
-- Light/dark theme toggle remembered on this browser, plus ready-to-edit email, SMS, and WhatsApp message templates.
+- Light/dark theme toggle remembered on this browser, built-in email/SMS/WhatsApp quick-start templates, and a browser-local custom template library (save, load, delete) for each channel. Custom templates never leave the browser and are cleared by the full local reset.\n- Live character counters for message bodies, including a visual warning as the field approaches its limit.
 - `GET /api/v1/health` reports process and channel configuration without claiming messages were delivered.
 - `POST /api/v1/email/send`: sends plain-text email through configured SMTP.
 - `POST /api/v1/otp/send` and `POST /api/v1/otp/verify`: email OTP with 5-minute expiry, single use, HMAC-hashed stored codes, 5 attempts, and a 60-second resend cooldown.
