@@ -159,3 +159,13 @@ test('API validates JSON content type and provides actionable rate-limit retry g
   assert.match(source, /res\.setHeader\('Retry-After', '60'\)/);
   assert.match(source, /Wait at least 60 seconds before retrying/);
 });
+
+
+test('API responses include a request correlation ID for troubleshooting', async () => {
+  const response = await fetch(base + '/api/v1/health');
+  const requestId = response.headers.get('x-request-id');
+  assert.ok(requestId);
+  assert.match(requestId, /^[0-9a-f-]{36}$/i);
+  const source = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+  assert.match(source, /res\.setHeader\('X-Request-Id', crypto\.randomUUID\(\)\)/);
+});
