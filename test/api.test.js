@@ -214,3 +214,37 @@ test('PostgreSQL connection helper bounds pool size and query timeouts', () => {
   assert.ok(source.includes('statement_timeout: 10000'));
   assert.ok(source.includes('SELECT 1'));
 });
+
+
+test('notification queue routes remain protected and report unavailable storage clearly', async () => {
+  const queued = await fetch(base + '/api/v1/notifications', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ channel: 'email', to: 'person@example.com', subject: 'Hello', text: 'Test' })
+  });
+  assert.equal(queued.status, 401);
+  assert.equal((await queued.json()).error, 'unauthorized');
+
+  const history = await fetch(base + '/api/v1/notifications');
+  assert.equal(history.status, 401);
+  assert.equal((await history.json()).error, 'unauthorized');
+});
+
+test('durable worker uses row locking, bounded retry delay, and delivery attempt history', () => {
+  const worker = fs.readFileSync(path.join(__dirname, '..', 'worker.js'), 'utf8');
+  assert.ok(worker.includes('FOR UPDATE SKIP LOCKED'));
+  assert.ok(worker.includes('max_attempts'));
+  assert.ok(worker.includes('delivery_attempts'));
+  assert.ok(worker.includes('dead_letter'));
+  assert.ok(worker.includes('Math.min(3600'));
+  assert.ok(worker.includes('providerStatus'));
+  assert.ok(worker.includes('Nexus Notify worker started'));
+});
+
+test('persistent notification queue uses idempotency and parameterized SQL', () => {
+  const queue = fs.readFileSync(path.join(__dirname, '..', 'db', 'notifications.js'), 'utf8');
+  assert.ok(queue.includes('ON CONFLICT (idempotency_key) DO NOTHING'));
+  assert.ok(queue.includes('SELECT id, channel, status'));
+  assert.ok(queue.includes('database_not_configured'));
+  assert.ok(queue.includes('$1'));
+});
