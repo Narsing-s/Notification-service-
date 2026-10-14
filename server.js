@@ -80,6 +80,18 @@ function getClientKey(req) {
 function rateLimited(req) {
   const key = getClientKey(req);
   const now = Date.now();
+  // Bound memory use if many distinct client addresses reach this process.
+  if (rate.size > 5000) {
+    for (const [client, times] of rate) {
+      const fresh = times.filter(t => now - t < RATE_WINDOW_MS);
+      if (fresh.length) rate.set(client, fresh);
+      else rate.delete(client);
+    }
+  }
+  if (!rate.has(key) && rate.size >= 10000) {
+    const oldest = rate.keys().next().value;
+    if (oldest !== undefined) rate.delete(oldest);
+  }
   const recent = (rate.get(key) || []).filter(t => now - t < RATE_WINDOW_MS);
   recent.push(now);
   rate.set(key, recent);
@@ -252,7 +264,10 @@ async function handle(req, res) {
   }
 }
 
-const server = http.createServer((req, res) => { handle(req, res).catch(() => json(res, 500, { error: 'internal_error' })); });
+const server = http.createServer((req, res) => { handle(req, res).catch(() => { if (!res.headersSent) json(res, 500, { error: 'internal_error' }); else res.destroy(); }); });
+server.requestTimeout = 30000;
+server.headersTimeout = 10000;
+server.keepAliveTimeout = 5000;
 if (require.main === module) {
   server.listen(PORT, '0.0.0.0', () => console.log('Nexus Notify API listening on port ' + PORT));
 }
