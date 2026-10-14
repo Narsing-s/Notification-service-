@@ -12,6 +12,10 @@ An own-brand notification platform starter with a responsive dashboard, protecte
 - Request body limit, API-key auth, timing-safe API-key comparison, basic per-IP rate limiting, validation, and no-store response headers.
 - No traditional database. OTP state is stored as a small local JSON file with restrictive permissions; use a persistent writable disk and protect backups.
 
+## Current status: development only — not deployed
+
+Per the project plan, no Vercel deployment has been created. Automatic GitHub Pages deployment is paused; the Pages workflow is manual-only while implementation and verification continue. The dashboard can be connected to a separately hosted API later, after the hosting and provider configuration are ready.
+
 ## Important: delivery setup is required
 
 The source code is committed, but real delivery is **not active until you deploy the API and configure the required environment variables**. GitHub Pages can host only the static dashboard; it cannot run this Node.js API. No live deployment or successful message delivery is claimed.
