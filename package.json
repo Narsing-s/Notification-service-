@@ -5,10 +5,12 @@
   "description": "Own-brand multi-channel notification platform with SMTP email and configurable gateway adapters",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "db:migrate": "node scripts/migrate.js"
   },
   "dependencies": {
-    "nodemailer": "^10.1.0"
+    "nodemailer": "^10.1.0",
+    "pg": "^8.16.3"
   },
   "engines": {
     "node": ">=20"
