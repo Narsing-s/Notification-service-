@@ -1,10 +1,6 @@
 name: Deploy Nexus Notify dashboard to GitHub Pages
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'index.html'
-      - '.github/workflows/pages.yml'
+  # Manual-only while development and verification are in progress.
   workflow_dispatch:
 permissions:
   contents: read
