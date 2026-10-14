@@ -29,6 +29,7 @@ async function enqueueNotification(input, idempotencyKey) {
 }
 
 async function getNotification(id) {
+  if (typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) return null;
   const db = getPool();
   if (!db) throw queueUnavailable();
   const result = await db.query('SELECT id, channel, status, provider_message_id, attempts, max_attempts, scheduled_at, accepted_at, sent_at, delivered_at, failed_at, last_error_code, created_at, updated_at FROM notifications WHERE id = $1', [id]);
