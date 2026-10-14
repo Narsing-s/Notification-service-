@@ -93,7 +93,12 @@ function json(res, status, body) {
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'no-referrer'
   });
-  res.end(JSON.stringify(body));
+  // Include the same safe correlation ID in JSON so dashboard/API clients can copy it easily.
+  const requestId = res.getHeader('X-Request-Id');
+  const responseBody = body && typeof body === 'object' && !Array.isArray(body) && requestId
+    ? { ...body, requestId }
+    : body;
+  res.end(JSON.stringify(responseBody));
 }
 function getClientKey(req) {
   // Do not trust arbitrary forwarded IP headers unless your reverse proxy strips and sets them.
