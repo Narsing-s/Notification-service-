@@ -1,0 +1,13 @@
+{
+  "name": "nexus-notify-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Own-brand multi-channel notification platform starter",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
