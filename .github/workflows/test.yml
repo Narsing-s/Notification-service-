@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'README.md'
+      - '.env.example'
       - 'server.js'
       - 'package.json'
       - 'package-lock.json'
