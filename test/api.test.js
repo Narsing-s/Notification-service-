@@ -150,3 +150,12 @@ test('OTP persistence removes expired or malformed records and caps stored recor
   assert.match(source, /keys\.length > MAX_OTP_RECORDS/);
   assert.match(source, /delete value\[key\]/);
 });
+
+
+test('API validates JSON content type and provides actionable rate-limit retry guidance', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+  assert.match(source, /contentType !== 'application\/json'/);
+  assert.match(source, /unsupported_media_type/);
+  assert.match(source, /res\.setHeader\('Retry-After', '60'\)/);
+  assert.match(source, /Wait at least 60 seconds before retrying/);
+});
