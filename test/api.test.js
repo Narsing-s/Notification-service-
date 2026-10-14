@@ -47,7 +47,7 @@ test('dashboard JavaScript parses and core connection controls exist', () => {
     assert.match(html, new RegExp('id="' + id + '"'));
   }
   assert.match(html, /sessionStorage/);
-  assert.doesNotMatch(html, /localStorage\\.setItem\\([^,]*(?:API|apiKey)/);
+  assert.equal(html.includes('localStorage.setItem(SESSION_API'), false);
 });
 
 test('CORS preflight allows only a configured dashboard origin', async () => {
