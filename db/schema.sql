@@ -5,11 +5,13 @@ CREATE TABLE IF NOT EXISTS app_users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   email text NOT NULL UNIQUE,
   password_hash text NOT NULL,
-  role text NOT NULL DEFAULT 'member' CHECK (role IN ('owner','admin','operator','viewer')),
+  role text NOT NULL DEFAULT 'viewer' CHECK (role IN ('owner','admin','operator','viewer')),
   status text NOT NULL DEFAULT 'active' CHECK (status IN ('active','invited','disabled')),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE app_users ALTER COLUMN role SET DEFAULT 'viewer';
 
 CREATE TABLE IF NOT EXISTS notification_preferences (
   user_id uuid PRIMARY KEY REFERENCES app_users(id) ON DELETE CASCADE,
