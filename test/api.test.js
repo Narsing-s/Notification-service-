@@ -123,3 +123,21 @@ test('repository environment example contains placeholders, not live provider se
   assert.doesNotMatch(env, /(?:sk_live_|ghp_[A-Za-z0-9]{20,}|AKIA[A-Z0-9]{16})/);
   assert.equal(fs.existsSync(path.join(__dirname, '..', '.env')), false);
 });
+
+
+test('channel character limits match the backend and live OTP explains its fixed expiry', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.match(html, /id="smsBody" maxlength="1600"/);
+  assert.match(html, /id="waBody" maxlength="4096"/);
+  assert.match(html, /function updateOtpMode\(\)/);
+  assert.match(html, /server enforces a fixed 5-minute expiry/);
+  assert.match(html, /Send verification code by email/);
+});
+
+test('server bounds rate-limit memory and configures HTTP timeouts', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+  assert.match(source, /rate\.size >= 10000/);
+  assert.match(source, /server\.requestTimeout = 30000/);
+  assert.match(source, /server\.headersTimeout = 10000/);
+  assert.match(source, /server\.keepAliveTimeout = 5000/);
+});
