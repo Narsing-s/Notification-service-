@@ -170,3 +170,27 @@ test('API responses include a request correlation ID for troubleshooting', async
   const source = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
   assert.match(source, /res\.setHeader\('X-Request-Id', crypto\.randomUUID\(\)\)/);
 });
+
+
+test('PostgreSQL schema includes durable queue, delivery history, roles, preferences and monitoring tables', () => {
+  const schema = fs.readFileSync(path.join(__dirname, '..', 'db', 'schema.sql'), 'utf8');
+  for (const table of ['app_users', 'notification_preferences', 'notifications', 'delivery_attempts', 'notification_templates', 'audit_events', 'system_alerts', 'schema_migrations']) {
+    assert.match(schema, new RegExp('CREATE TABLE IF NOT EXISTS ' + table + '\\b'));
+  }
+  assert.match(schema, /idempotency_key text UNIQUE/);
+  assert.match(schema, /next_attempt_at timestamptz/);
+  assert.match(schema, /status IN \\('queued','processing','accepted','sent','delivered','failed','cancelled','dead_letter'\\)/);
+  assert.match(schema, /role IN \\('owner','admin','operator','viewer'\\)/);
+  assert.match(schema, /quiet_hours_enabled boolean/);
+  assert.match(schema, /CREATE INDEX IF NOT EXISTS notifications_status_next_attempt_idx/);
+});
+
+test('database migration runner requires configuration and never contains credentials', () => {
+  const runner = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'migrate.js'), 'utf8');
+  const env = fs.readFileSync(path.join(__dirname, '..', '.env.example'), 'utf8');
+  assert.match(runner, /if \\(!connectionString\\)/);
+  assert.match(runner, /BEGIN/);
+  assert.match(runner, /ROLLBACK/);
+  assert.match(env, /DATABASE_URL=postgresql:\\/\\/USER:PASSWORD@HOST/);
+  assert.doesNotMatch(env, /postgres(?:ql)?:\\/\\/[^\s:]+:[^\s@]{8,}@[^\s]+/);
+});
