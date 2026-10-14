@@ -7,6 +7,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { databaseConfigured, checkDatabase } = require('./db/connection');
 const { enqueueNotification, getNotification, listNotifications } = require('./db/notifications');
+const { getAnalyticsSummary } = require('./db/analytics');
 
 const PORT = Number(process.env.PORT || 3000);
 const API_KEY = process.env.NEXUS_API_KEY || '';
@@ -224,11 +225,19 @@ async function handle(req, res) {
   if (!url.pathname.startsWith('/api/v1/')) return json(res, 404, { error: 'not_found' });
   const notificationReadRoute = req.method === 'GET' && (url.pathname === '/api/v1/notifications' || url.pathname.startsWith('/api/v1/notifications/'));
   const notificationQueueRoute = req.method === 'POST' && url.pathname === '/api/v1/notifications';
-  if (!['POST'].includes(req.method) && !notificationReadRoute) return json(res, 405, { error: 'method_not_allowed' });
+  const analyticsReadRoute = req.method === 'GET' && url.pathname === '/api/v1/analytics/summary';
+  if (!['POST'].includes(req.method) && !notificationReadRoute && !analyticsReadRoute) return json(res, 405, { error: 'method_not_allowed' });
   if (!authorized(req)) return json(res, 401, { error: 'unauthorized', message: 'A valid X-API-Key is required.' });
   if (rateLimited(req)) {
     res.setHeader('Retry-After', '60');
     return json(res, 429, { error: 'rate_limited', message: 'Too many requests. Wait at least 60 seconds before retrying.' });
+  }
+  if (analyticsReadRoute) {
+    try {
+      return json(res, 200, await getAnalyticsSummary(url.searchParams.get('days')));
+    } catch (err) {
+      return json(res, err.status || 503, { error: err.code || 'analytics_unavailable', message: err.status ? err.message : 'Persistent analytics could not be loaded.' });
+    }
   }
   if (notificationReadRoute) {
     try {
