@@ -266,3 +266,20 @@ test('analytics aggregation is bounded and distinguishes provider acceptance fro
   const worker = fs.readFileSync(path.join(__dirname, '..', 'worker.js'), 'utf8');
   assert.doesNotThrow(() => new vm.Script(worker));
 });
+
+
+test('monitoring endpoint remains protected by the API key', async () => {
+  const response = await fetch(base + '/api/v1/monitoring/summary');
+  assert.equal(response.status, 401);
+  assert.equal((await response.json()).error, 'unauthorized');
+});
+
+test('monitoring uses persisted alerts with stable fingerprints and bounded thresholds', () => {
+  const monitoring = fs.readFileSync(path.join(__dirname, '..', 'db', 'monitoring.js'), 'utf8');
+  const schema = fs.readFileSync(path.join(__dirname, '..', 'db', 'schema.sql'), 'utf8');
+  assert.ok(monitoring.includes('QUEUE_BACKLOG_ALERT_THRESHOLD'));
+  assert.ok(monitoring.includes('DEAD_LETTER_ALERT_THRESHOLD'));
+  assert.ok(monitoring.includes('ON CONFLICT (fingerprint)'));
+  assert.ok(monitoring.includes('stale-processing'));
+  assert.ok(schema.includes('system_alerts_open_fingerprint_idx'));
+});
