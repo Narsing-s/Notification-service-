@@ -42,10 +42,12 @@ test('dashboard JavaScript parses and core connection controls exist', () => {
   const scriptEnd = html.lastIndexOf('</script>');
   assert.ok(scriptStart >= 0 && scriptEnd > scriptStart, 'dashboard script exists');
   assert.doesNotThrow(() => new vm.Script(html.slice(scriptStart + 8, scriptEnd)));
-  for (const id of ['connectionForm', 'apiBase', 'apiKey', 'testConnection', 'disconnectApi', 'emailForm', 'otpForm', 'smsRecord', 'waRecord', 'activityList', 'activitySearch', 'activityChannel', 'activityStatus', 'exportActivityCsv']) {
+  for (const id of ['connectionForm', 'apiBase', 'apiKey', 'testConnection', 'disconnectApi', 'emailForm', 'otpForm', 'smsRecord', 'waRecord', 'activityList', 'activitySearch', 'activityChannel', 'activityStatus', 'exportActivityCsv', 'themeToggle', 'emailTemplate', 'smsTemplate', 'waTemplate']) {
     assert.match(html, new RegExp('id="' + id + '"'));
   }
   assert.match(html, /sessionStorage/);
+  assert.match(html, /function applyTheme/);
+  assert.match(html, /function applyTemplate/);
   assert.equal(html.includes('localStorage.setItem(SESSION_API'), false);
 });
 
