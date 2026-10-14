@@ -29,6 +29,17 @@ The worker claims due rows with PostgreSQL row locks so multiple worker processe
 **Delivery semantics:** a worker success means the configured SMTP server or gateway accepted the message. It does not mean the recipient received it. Provider callbacks/webhooks are still needed to turn accepted messages into confirmed `delivered` status. As with most external provider integrations, a crash after provider acceptance but before the database update can cause a retry; use provider-side idempotency where supported.
 
 
+
+### Monitoring and persistent alerts
+
+The Queue dashboard's **Monitoring & alerts** panel calls `GET /api/v1/monitoring/summary`. It measures due queue backlog, stale processing records, dead-letter count and recent failures. Threshold breaches create deduplicated records in `system_alerts`, so repeated health checks do not create a new open alert for the same condition.
+
+Optional private environment settings:
+- `QUEUE_BACKLOG_ALERT_THRESHOLD` — due queue rows that trigger a warning (default 100).
+- `DEAD_LETTER_ALERT_THRESHOLD` — dead-letter rows that trigger a critical alert (default 1).
+
+These alerts are persisted in PostgreSQL and shown in the dashboard; sending them to email, SMS, Slack or an on-call paging service is not yet configured. A monitoring check needs to be called or scheduled to detect threshold changes.
+
 ### Persistent analytics
 
 The Queue dashboard includes a reporting panel backed by `GET /api/v1/analytics/summary?days=7` (the period is bounded to 1–90 days). It reports totals by lifecycle status, channel/status breakdowns, and daily trends from PostgreSQL. The dashboard intentionally labels confirmed delivery separately from provider acceptance; the delivery rate is only meaningful after a provider webhook or callback updates records to `delivered`.
