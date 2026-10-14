@@ -1,5 +1,5 @@
 'use strict';
-const CACHE = 'nexus-notify-shell-v1';
+const CACHE = 'nexus-notify-shell-v2';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './nexus-icon.svg'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
