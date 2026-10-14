@@ -53,6 +53,17 @@ function writeOtpState(state) {
   fs.writeFileSync(temp, JSON.stringify(state), { mode: 0o600 });
   fs.renameSync(temp, OTP_FILE);
 }
+function applyCors(req, res) {
+  const origin = req.headers.origin;
+  const allowed = String(process.env.CORS_ORIGIN || '').split(',').map(x => x.trim()).filter(Boolean);
+  if (origin && allowed.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,X-API-Key');
+    res.setHeader('Access-Control-Max-Age', '600');
+  }
+}
 function json(res, status, body) {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
@@ -140,9 +151,10 @@ async function postGateway(urlString, token, payload) {
   } finally { clearTimeout(timeout); }
 }
 async function handle(req, res) {
+  applyCors(req, res);
   const url = new URL(req.url, 'http://localhost');
   if (req.method === 'OPTIONS') {
-    res.writeHead(204, { 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type,X-API-Key', 'Access-Control-Max-Age': '600' });
+    res.writeHead(204);
     return res.end();
   }
   if (req.method === 'GET' && ['/health', '/api/v1/health'].includes(url.pathname)) {
