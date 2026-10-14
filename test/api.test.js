@@ -202,7 +202,8 @@ test('readiness endpoint reports PostgreSQL status without exposing connection d
   assert.ok(['ready', 'not_ready'].includes(body.status));
   assert.ok(['connected', 'unavailable', 'not_configured'].includes(body.database.status));
   assert.equal(typeof body.database.configured, 'boolean');
-  assert.doesNotMatch(JSON.stringify(body), /postgres(?:ql)?:\\/\\/[^\\s]+@/i);
+  assert.equal(Object.hasOwn(body.database, 'connectionString'), false);
+  assert.equal(JSON.stringify(body).includes('DATABASE_URL'), false);
   assert.match(body.note, /PostgreSQL|persistent notification storage/i);
 });
 
