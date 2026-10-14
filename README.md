@@ -8,7 +8,7 @@ An own-brand notification platform starter with a responsive dashboard, protecte
 - Searchable activity log with channel/status filters, newest/oldest sorting, JSON export, CSV export, and explicit clear-history controls.
 - Safe workspace backup/restore exports browser-local history, preferences, theme, and saved templates as JSON. Restore validates the file (1 MB maximum) and asks for confirmation before replacing local data. API keys, session settings, and server credentials are deliberately excluded.
 - SMS and WhatsApp text fields match the backend's supported character limits and show live counts; OTP expiry controls switch to explain the server-enforced five-minute lifetime when a backend is connected.
-- HTTP request/header/keep-alive timeouts are explicitly configured, and the in-memory rate-limit map is bounded to reduce resource-exhaustion risk.
+- HTTP request/header/keep-alive timeouts are explicitly configured, and the in-memory rate-limit map is bounded to reduce resource-exhaustion risk. Each API response also includes an `X-Request-Id` correlation header to help troubleshoot failures without logging message contents or credentials.
 - Light/dark theme toggle remembered on this browser, built-in email/SMS/WhatsApp quick-start templates, and a browser-local custom template library (save, load, delete) for each channel. Custom templates never leave the browser and are cleared by the full local reset.
 - Live character counters for message bodies, including a visual warning as the field approaches its limit.
 - `GET /api/v1/health` reports process and channel configuration without claiming messages were delivered.
