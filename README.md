@@ -47,6 +47,7 @@ Copy `.env.example` as a reference, then set the values in your host's environme
 - `SMS_GATEWAY_URL` / `SMS_GATEWAY_TOKEN`: optional SMS gateway endpoint and bearer token.
 - `WHATSAPP_GATEWAY_URL` / `WHATSAPP_GATEWAY_TOKEN`: optional authorized WhatsApp gateway endpoint and bearer token.
 - `DATA_DIR`: writable persistent path for OTP state.
+- `CORS_ORIGIN`: exact allowed browser dashboard origin(s), comma-separated. Configure the real deployed dashboard origin; do not use `*` for the admin API.
 
 All send requests use JSON and the `X-API-Key: <NEXUS_API_KEY>` header. Example:
 
@@ -81,4 +82,4 @@ A `202 accepted_by_smtp` response means SMTP accepted the email. A `202 accepted
 
 ## Limitations
 
-The JSON file store is intentionally small and suitable only for a single persistent process; it is not a distributed queue or multi-instance store. Basic in-memory rate limiting resets on restart and is not a substitute for production abuse prevention. The dashboard is not yet wired to call protected sending APIs because its API key must never be exposed in browser code. Do not use this starter as a production authentication service without further security review.
+The JSON file store is intentionally small and suitable only for a single persistent process; it is not a distributed queue or multi-instance store. Basic in-memory rate limiting resets on restart and is not a substitute for production abuse prevention. The dashboard can call the API when an operator enters the API base URL and key in Settings. The key is held in `sessionStorage` for the current tab session only, not in LocalStorage; however, it is still accessible to scripts running on that page. Use this only for a trusted, private operator dashboard, never a public multi-user product. For a public SaaS, add server-side user authentication and a server-side proxy so a shared API secret is never sent to browsers. The dashboard API connection requires the exact frontend origin in `CORS_ORIGIN`.
