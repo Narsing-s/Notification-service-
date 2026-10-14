@@ -28,6 +28,11 @@ The worker claims due rows with PostgreSQL row locks so multiple worker processe
 
 **Delivery semantics:** a worker success means the configured SMTP server or gateway accepted the message. It does not mean the recipient received it. Provider callbacks/webhooks are still needed to turn accepted messages into confirmed `delivered` status. As with most external provider integrations, a crash after provider acceptance but before the database update can cause a retry; use provider-side idempotency where supported.
 
+
+### Persistent analytics
+
+The Queue dashboard includes a reporting panel backed by `GET /api/v1/analytics/summary?days=7` (the period is bounded to 1–90 days). It reports totals by lifecycle status, channel/status breakdowns, and daily trends from PostgreSQL. The dashboard intentionally labels confirmed delivery separately from provider acceptance; the delivery rate is only meaningful after a provider webhook or callback updates records to `delivered`.
+
 The API's direct `/api/v1/email/send`, `/api/v1/sms/send`, and `/api/v1/whatsapp/send` routes remain immediate-send routes; use `/api/v1/notifications` when durable queuing is required. Account login, per-user authorization, preference enforcement, analytics dashboards, provider delivery webhooks, and alert dispatch are not yet implemented.
 
 ## PostgreSQL platform foundation (new)
