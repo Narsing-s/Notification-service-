@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test",
-    "db:migrate": "node scripts/migrate.js"
+    "db:migrate": "node scripts/migrate.js",
+    "worker": "node worker.js"
   },
   "dependencies": {
     "nodemailer": "^10.1.0",
