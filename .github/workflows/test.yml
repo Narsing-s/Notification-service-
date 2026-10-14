@@ -4,6 +4,9 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'manifest.webmanifest'
+      - 'sw.js'
+      - 'nexus-icon.svg'
       - 'README.md'
       - 'openapi.yaml'
       - '.env.example'
