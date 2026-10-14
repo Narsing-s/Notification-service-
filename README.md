@@ -2,6 +2,30 @@
 
 An own-brand notification platform starter with a responsive dashboard, protected Node.js API, SMTP email, email OTP, and configurable SMS/WhatsApp gateway adapters.
 
+
+## PostgreSQL platform foundation (new)
+
+A PostgreSQL schema and migration runner are now included for the next production-hardening phase:
+
+- `app_users`: account records with owner/admin/operator/viewer roles. The schema stores a password hash only; it does not implement login by itself.
+- `notification_preferences`: per-user channel defaults and optional quiet hours/time zone.
+- `notifications`: durable notification/outbox records, scheduling, idempotency keys, lifecycle statuses and retry counters.
+- `delivery_attempts`: per-attempt provider outcomes and errors.
+- `notification_templates`: reusable per-user message templates.
+- `audit_events` and `system_alerts`: operational audit and alert records.
+- Indexes for due queue jobs, notification history and open alerts.
+
+### Prepare a database
+
+1. Provision a PostgreSQL database on a trusted host.
+2. Set `DATABASE_URL` in the hosting provider's private environment settings. `.env.example` contains a placeholder only; never commit a real database URL or password.
+3. Install dependencies with `npm install`.
+4. Run `npm run db:migrate` from a trusted environment that can reach the database.
+
+The migration runner uses a transaction and reports a failure without printing the connection URL. The schema migration is designed to be re-runnable.
+
+**Important implementation boundary:** this commit adds the database schema and migration tooling, not a fully switched-over runtime. Existing send routes and OTP state still use the current server behavior; they do not automatically persist notifications to PostgreSQL yet. The queue tables are ready for integration, but a background worker, retry processing, provider delivery receipts, production login/session handling, and database-backed analytics still need implementation and testing before this can be considered production-ready. Do not create user accounts by inserting plaintext passwords; authentication must use a reviewed password-hashing and session strategy.
+
 ## Implemented
 
 - Dashboard in `index.html`; its browser preferences/history remain local to that browser. Installable PWA shell (`manifest.webmanifest`, `sw.js`, `nexus-icon.svg`) supports adding the dashboard to compatible devices and opening the cached dashboard shell offline. API routes are excluded from service-worker caching; offline mode never pretends messages were delivered.
