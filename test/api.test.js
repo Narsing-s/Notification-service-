@@ -179,8 +179,8 @@ test('PostgreSQL schema includes durable queue, delivery history, roles, prefere
   }
   assert.match(schema, /idempotency_key text UNIQUE/);
   assert.match(schema, /next_attempt_at timestamptz/);
-  assert.match(schema, /status IN \\('queued','processing','accepted','sent','delivered','failed','cancelled','dead_letter'\\)/);
-  assert.match(schema, /role IN \\('owner','admin','operator','viewer'\\)/);
+  assert.ok(schema.includes("status IN ('queued','processing','accepted','sent','delivered','failed','cancelled','dead_letter')"));
+  assert.ok(schema.includes("role IN ('owner','admin','operator','viewer')"));
   assert.match(schema, /quiet_hours_enabled boolean/);
   assert.match(schema, /CREATE INDEX IF NOT EXISTS notifications_status_next_attempt_idx/);
 });
@@ -188,9 +188,9 @@ test('PostgreSQL schema includes durable queue, delivery history, roles, prefere
 test('database migration runner requires configuration and never contains credentials', () => {
   const runner = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'migrate.js'), 'utf8');
   const env = fs.readFileSync(path.join(__dirname, '..', '.env.example'), 'utf8');
-  assert.match(runner, /if \\(!connectionString\\)/);
+  assert.ok(runner.includes('if (!connectionString)'));
   assert.match(runner, /BEGIN/);
   assert.match(runner, /ROLLBACK/);
-  assert.match(env, /DATABASE_URL=postgresql:\\/\\/USER:PASSWORD@HOST/);
+  assert.ok(env.includes('DATABASE_URL=postgresql://USER:PASSWORD@HOST'));
   assert.doesNotMatch(env, /postgres(?:ql)?:\\/\\/[^\s:]+:[^\s@]{8,}@[^\s]+/);
 });
