@@ -201,7 +201,14 @@ async function handle(req, res) {
   if (!url.pathname.startsWith('/api/v1/')) return json(res, 404, { error: 'not_found' });
   if (!['POST'].includes(req.method)) return json(res, 405, { error: 'method_not_allowed' });
   if (!authorized(req)) return json(res, 401, { error: 'unauthorized', message: 'A valid X-API-Key is required.' });
-  if (rateLimited(req)) return json(res, 429, { error: 'rate_limited', message: 'Too many requests. Retry later.' });
+  if (rateLimited(req)) {
+    res.setHeader('Retry-After', '60');
+    return json(res, 429, { error: 'rate_limited', message: 'Too many requests. Wait at least 60 seconds before retrying.' });
+  }
+  const contentType = String(req.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
+  if (contentType !== 'application/json') {
+    return json(res, 415, { error: 'unsupported_media_type', message: 'Send request data using Content-Type: application/json.' });
+  }
 
   let body;
   try { body = await readBody(req); }
