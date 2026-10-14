@@ -5,6 +5,7 @@ An own-brand notification platform starter with a responsive dashboard, protecte
 ## Implemented
 
 - Dashboard in `index.html`; its browser preferences/history remain local to that browser.
+- Searchable activity log with channel/status filters, newest/oldest sorting, JSON export, CSV export, and explicit clear-history controls.
 - `GET /api/v1/health` reports process and channel configuration without claiming messages were delivered.
 - `POST /api/v1/email/send`: sends plain-text email through configured SMTP.
 - `POST /api/v1/otp/send` and `POST /api/v1/otp/verify`: email OTP with 5-minute expiry, single use, HMAC-hashed stored codes, 5 attempts, and a 60-second resend cooldown.
@@ -63,6 +64,10 @@ curl -X POST http://localhost:3000/api/v1/email/send \
 ```
 
 A `202 accepted_by_smtp` response means SMTP accepted the email. A `202 accepted_by_gateway` response means the configured gateway accepted the request; it is not a final delivery receipt.
+
+## API schema
+
+The machine-readable OpenAPI 3.1 contract is in [`openapi.yaml`](./openapi.yaml). Keep this specification aligned with the server implementation when endpoints change.
 
 ## API routes
 
