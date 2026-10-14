@@ -39,7 +39,7 @@ async function queueApi(route,options={}) {
   const c=apiConfig();if(!c.base||!c.key)throw new Error('Connect your backend in Settings first.');
   const headers={'X-API-Key':c.key,...(options.payload?{'Content-Type':'application/json'}:{}),...(options.idempotencyKey?{'Idempotency-Key':options.idempotencyKey}:{})};
   let response;const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
-  try{response=await fetch(c.base.replace(/\\/+$/,'')+route,{method:options.method||'GET',headers,body:options.payload?JSON.stringify(options.payload):undefined,signal:controller.signal})}
+  try{response=await fetch(c.base.replace(/\/+$/,'')+route,{method:options.method||'GET',headers,body:options.payload?JSON.stringify(options.payload):undefined,signal:controller.signal})}
   catch(e){if(e.name==='AbortError')throw new Error('The request timed out. Check queue status before retrying.');throw new Error('Could not reach the API. Check the HTTPS URL, CORS_ORIGIN and backend status.')}
   finally{clearTimeout(timeout)}
   let data={};try{data=await response.json()}catch{}
