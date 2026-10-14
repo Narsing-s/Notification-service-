@@ -226,6 +226,10 @@ async function handle(req, res) {
   const notificationQueueRoute = req.method === 'POST' && url.pathname === '/api/v1/notifications';
   if (!['POST'].includes(req.method) && !notificationReadRoute) return json(res, 405, { error: 'method_not_allowed' });
   if (!authorized(req)) return json(res, 401, { error: 'unauthorized', message: 'A valid X-API-Key is required.' });
+  if (rateLimited(req)) {
+    res.setHeader('Retry-After', '60');
+    return json(res, 429, { error: 'rate_limited', message: 'Too many requests. Wait at least 60 seconds before retrying.' });
+  }
   if (notificationReadRoute) {
     try {
       if (url.pathname === '/api/v1/notifications') {
@@ -238,10 +242,6 @@ async function handle(req, res) {
     } catch (err) {
       return json(res, err.status || 503, { error: err.code || 'notification_history_unavailable', message: err.status ? err.message : 'Notification history could not be loaded.' });
     }
-  }
-  if (rateLimited(req)) {
-    res.setHeader('Retry-After', '60');
-    return json(res, 429, { error: 'rate_limited', message: 'Too many requests. Wait at least 60 seconds before retrying.' });
   }
   const contentType = String(req.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
   if (contentType !== 'application/json') {
