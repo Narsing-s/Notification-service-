@@ -61,7 +61,7 @@ Copy `.env.example` as a reference, then set the values in your host's environme
 - OTP state is pruned for expired/malformed entries and capped at 10,000 records to prevent unbounded file growth; this is still a single-process file store, not production-grade shared storage.
 - `CORS_ORIGIN`: exact allowed browser dashboard origin(s), comma-separated. Configure the real deployed dashboard origin; do not use `*` for the admin API.
 
-All send requests use JSON and the `X-API-Key: <NEXUS_API_KEY>` header. Example:
+All send requests use `Content-Type: application/json` and the `X-API-Key: <NEXUS_API_KEY>` header. Requests with another content type are rejected with `415 unsupported_media_type`. Rate-limited requests return `429` with a `Retry-After: 60` header. Example:
 
 ```bash
 curl -X POST http://localhost:3000/api/v1/email/send \
