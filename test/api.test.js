@@ -193,3 +193,23 @@ test('database migration runner requires configuration and never contains creden
   assert.match(runner, /ROLLBACK/);
   assert.ok(env.includes('DATABASE_URL=postgresql://USER:PASSWORD@HOST'));
 });
+
+
+test('readiness endpoint reports PostgreSQL status without exposing connection details', async () => {
+  const response = await fetch(base + '/ready');
+  assert.ok([200, 503].includes(response.status));
+  const body = await response.json();
+  assert.ok(['ready', 'not_ready'].includes(body.status));
+  assert.ok(['connected', 'unavailable', 'not_configured'].includes(body.database.status));
+  assert.equal(typeof body.database.configured, 'boolean');
+  assert.doesNotMatch(JSON.stringify(body), /postgres(?:ql)?:\\/\\/[^\\s]+@/i);
+  assert.match(body.note, /PostgreSQL|persistent notification storage/i);
+});
+
+test('PostgreSQL connection helper bounds pool size and query timeouts', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'db', 'connection.js'), 'utf8');
+  assert.match(source, /max: Number\\(process\\.env\\.PGPOOL_MAX \\|\\| 5\\)/);
+  assert.match(source, /connectionTimeoutMillis: 5000/);
+  assert.match(source, /statement_timeout: 10000/);
+  assert.match(source, /SELECT 1/);
+});
