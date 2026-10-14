@@ -1,0 +1,16 @@
+{
+  "id": "./",
+  "name": "Nexus Notify — Communication Platform",
+  "short_name": "Nexus Notify",
+  "description": "A private multi-channel notification operations dashboard.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    { "src": "./nexus-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
