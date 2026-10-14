@@ -20,6 +20,7 @@ test('health endpoint reports process state without claiming delivery', async ()
   const body = await response.json();
   assert.equal(body.status, 'online');
   assert.match(body.note, /not a delivery guarantee/i);
+  assert.match(body.requestId, /^[0-9a-f-]{36}$/i);
 });
 
 test('send endpoints require an API key', async () => {
