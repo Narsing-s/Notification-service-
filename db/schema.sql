@@ -113,6 +113,8 @@ CREATE TABLE IF NOT EXISTS system_alerts (
 );
 CREATE INDEX IF NOT EXISTS system_alerts_open_idx ON system_alerts (severity, created_at DESC)
   WHERE acknowledged_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS system_alerts_open_fingerprint_idx ON system_alerts (fingerprint)
+  WHERE acknowledged_at IS NULL AND fingerprint IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS schema_migrations (
   version text PRIMARY KEY,
