@@ -8,6 +8,8 @@ on:
       - 'sw.js'
       - 'nexus-icon.svg'
       - 'README.md'
+      - 'SECURITY.md'
+      - '.gitignore'
       - 'openapi.yaml'
       - '.env.example'
       - 'server.js'
