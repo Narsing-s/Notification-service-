@@ -5,6 +5,7 @@ on:
     paths:
       - 'index.html'
       - 'README.md'
+      - 'openapi.yaml'
       - '.env.example'
       - 'server.js'
       - 'package.json'
@@ -25,4 +26,5 @@ jobs:
         with:
           node-version: 20
       - run: npm install
+      - run: npm audit --omit=dev
       - run: npm test
