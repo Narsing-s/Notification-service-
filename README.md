@@ -6,12 +6,14 @@ An own-brand notification platform starter with a responsive dashboard, protecte
 
 - Dashboard in `index.html`; its browser preferences/history remain local to that browser. Installable PWA shell (`manifest.webmanifest`, `sw.js`, `nexus-icon.svg`) supports adding the dashboard to compatible devices and opening the cached dashboard shell offline. API routes are excluded from service-worker caching; offline mode never pretends messages were delivered.
 - Searchable activity log with channel/status filters, newest/oldest sorting, JSON export, CSV export, and explicit clear-history controls.
-- Light/dark theme toggle remembered on this browser, built-in email/SMS/WhatsApp quick-start templates, and a browser-local custom template library (save, load, delete) for each channel. Custom templates never leave the browser and are cleared by the full local reset.\n- Live character counters for message bodies, including a visual warning as the field approaches its limit.
+- Light/dark theme toggle remembered on this browser, built-in email/SMS/WhatsApp quick-start templates, and a browser-local custom template library (save, load, delete) for each channel. Custom templates never leave the browser and are cleared by the full local reset.
+- Live character counters for message bodies, including a visual warning as the field approaches its limit.
 - `GET /api/v1/health` reports process and channel configuration without claiming messages were delivered.
 - `POST /api/v1/email/send`: sends plain-text email through configured SMTP.
 - `POST /api/v1/otp/send` and `POST /api/v1/otp/verify`: email OTP with 5-minute expiry, single use, HMAC-hashed stored codes, 5 attempts, and a 60-second resend cooldown.
 - `POST /api/v1/sms/send` and `POST /api/v1/whatsapp/send`: forwards to optional, explicitly configured HTTPS gateway adapters. These are adapters—not direct access to mobile-carrier or WhatsApp networks.
-- Request body limit, API-key auth, timing-safe API-key comparison, basic per-IP rate limiting, validation, and no-store response headers.
+- Request body limit, API-key auth, timing-safe API-key comparison, basic per-IP rate limiting, validation, and no-store response headers. Browser API calls time out rather than hanging indefinitely, and the API key field has an accessible show/hide control.
+- .gitignore excludes environment files, local OTP data, logs, dependencies, and build outputs. No real API keys or provider credentials are included in this repository.
 - No traditional database. OTP state is stored as a small local JSON file with restrictive permissions; use a persistent writable disk and protect backups.
 
 ## Current status: development only — not deployed
