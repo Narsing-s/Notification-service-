@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const { server } = require('../server');
+const { server } = require('../lib/notification-server.cjs');
 
 let base;
 before(async () => {
@@ -136,7 +136,7 @@ test('channel character limits match the backend and live OTP explains its fixed
 });
 
 test('server bounds rate-limit memory and configures HTTP timeouts', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '..', 'lib', 'notification-server.cjs'), 'utf8');
   assert.match(source, /rate\.size >= 10000/);
   assert.match(source, /server\.requestTimeout = 30000/);
   assert.match(source, /server\.headersTimeout = 10000/);
@@ -145,7 +145,7 @@ test('server bounds rate-limit memory and configures HTTP timeouts', () => {
 
 
 test('OTP persistence removes expired or malformed records and caps stored records', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '..', 'lib', 'notification-server.cjs'), 'utf8');
   assert.match(source, /const MAX_OTP_RECORDS = 10000/);
   assert.match(source, /entry\.expiresAt <= now/);
   assert.match(source, /keys\.length > MAX_OTP_RECORDS/);
@@ -154,7 +154,7 @@ test('OTP persistence removes expired or malformed records and caps stored recor
 
 
 test('API validates JSON content type and provides actionable rate-limit retry guidance', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '..', 'lib', 'notification-server.cjs'), 'utf8');
   assert.match(source, /contentType !== 'application\/json'/);
   assert.match(source, /unsupported_media_type/);
   assert.match(source, /res\.setHeader\('Retry-After', '60'\)/);
@@ -167,7 +167,7 @@ test('API responses include a request correlation ID for troubleshooting', async
   const requestId = response.headers.get('x-request-id');
   assert.ok(requestId);
   assert.match(requestId, /^[0-9a-f-]{36}$/i);
-  const source = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '..', 'lib', 'notification-server.cjs'), 'utf8');
   assert.match(source, /res\.setHeader\('X-Request-Id', crypto\.randomUUID\(\)\)/);
 });
 
