@@ -1,5 +1,29 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "api/[...path].js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "^/api(?:/.*)?$",
+      "dest": "/api/[...path].js"
+    },
+    {
+      "src": "^/ready$",
+      "dest": "/api/[...path].js"
+    },
+    {
+      "src": "^/(.*)$",
+      "dest": "/$1"
+    }
+  ],
   "functions": {
     "api/[...path].js": {
       "maxDuration": 10
