@@ -120,7 +120,7 @@ Requires Node.js 20+.
 ```bash
 npm install
 cp .env.example .env
-# Set real values in your shell/environment; server.js does not auto-load .env files.
+# Set real values in your shell/environment; lib/notification-server.cjs does not auto-load .env files.
 npm test
 npm start
 ``
