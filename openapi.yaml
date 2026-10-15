@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Nexus Notify API
+  title: Notification Service API
   version: 0.2.0
   description: >-
     Multi-channel notification API. A 202 response indicates acceptance by the
@@ -114,7 +114,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  service: { type: string, example: Nexus Notify }
+                  service: { type: string, example: Notification Service }
                   status: { type: string, example: online }
                   channels:
                     type: object
