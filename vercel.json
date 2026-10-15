@@ -39,10 +39,5 @@
       "src": "^/$",
       "dest": "/index.html"
     }
-  ],
-  "functions": {
-    "api/[...path].js": {
-      "maxDuration": 10
-    }
-  }
+  ]
 }
