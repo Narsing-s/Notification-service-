@@ -32,8 +32,8 @@
       "dest": "/api/[...path].js"
     },
     {
-      "src": "^/ready$",
-      "dest": "/api/[...path].js"
+      "src": "^/favicon\\.ico$",
+      "dest": "/nexus-icon.svg"
     },
     {
       "src": "^/$",
