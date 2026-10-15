@@ -4,7 +4,7 @@
   "private": true,
   "description": "Own-brand multi-channel notification platform with SMTP email and configurable gateway adapters",
   "scripts": {
-    "start": "node server.js",
+    "start": "node lib/notification-server.cjs",
     "test": "node --test",
     "db:migrate": "node scripts/migrate.js",
     "worker": "node worker.js"
