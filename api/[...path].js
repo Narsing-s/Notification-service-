@@ -2,7 +2,7 @@
 
 // Vercel Node.js Function adapter for the existing HTTP API.
 // Keep all routing, validation, and security behavior in server.js.
-const { handle } = require('../server');
+const { handle } = require('../lib/notification-server.cjs');
 
 module.exports = async function notificationApi(req, res) {
   try {
