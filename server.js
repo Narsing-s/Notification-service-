@@ -369,4 +369,13 @@ server.keepAliveTimeout = 5000;
 if (require.main === module) {
   server.listen(PORT, '0.0.0.0', () => console.log('Nexus Notify API listening on port ' + PORT));
 }
-module.exports = { server, handle, channelStatus };
+// Export a serverless-compatible default handler for Vercel's Node.js runtime.
+// Keep named properties so the standalone server and API adapter reuse this logic.
+function notificationHandler(req, res) {
+  return handle(req, res);
+}
+notificationHandler.server = server;
+notificationHandler.handle = handle;
+notificationHandler.channelStatus = channelStatus;
+module.exports = notificationHandler;
+
