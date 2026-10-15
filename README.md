@@ -1,4 +1,4 @@
-# Nexus Notify — Notification Service
+# Notification Service — Notification Service
 
 An own-brand notification platform starter with a responsive dashboard, protected Node.js API, SMTP email, email OTP, and configurable SMS/WhatsApp gateway adapters.
 
@@ -145,7 +145,7 @@ All send requests use `Content-Type: application/json` and the `X-API-Key: <NEXU
 curl -X POST http://localhost:3000/api/v1/email/send \
   -H 'content-type: application/json' \
   -H 'X-API-Key: YOUR_SECRET' \
-  -d '{"to":"recipient@example.com","subject":"Hello","text":"Test from Nexus Notify"}'
+  -d '{"to":"recipient@example.com","subject":"Hello","text":"Test from Notification Service"}'
 ```
 
 A `202 accepted_by_smtp` response means SMTP accepted the email. A `202 accepted_by_gateway` response means the configured gateway accepted the request; it is not a final delivery receipt.
