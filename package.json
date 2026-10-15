@@ -1,8 +1,8 @@
 {
-  "name": "nexus-notify-platform",
+  "name": "notification-service",
   "version": "0.2.0",
   "private": true,
-  "description": "Own-brand multi-channel notification platform with SMTP email and configurable gateway adapters",
+  "description": "Self-contained notification management application with dashboard, queue, templates, and activity history",
   "scripts": {
     "start": "node lib/notification-server.cjs",
     "test": "node --test",
